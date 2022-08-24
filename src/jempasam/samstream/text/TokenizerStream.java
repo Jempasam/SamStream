@@ -18,6 +18,7 @@ public class TokenizerStream implements SamStream<String>{
 	private StringBuilder sb;
 	private int depth;
 	private int opener;
+	private boolean keeped;
 	private int copener;
 	private boolean succeed=true;
 	
@@ -31,6 +32,7 @@ public class TokenizerStream implements SamStream<String>{
 		this.depth=0;
 		this.opener=-1;
 		this.copener=-1;
+		this.keeped=false;
 		this.sb=new StringBuilder();
 	}
 	
@@ -57,7 +59,10 @@ public class TokenizerStream implements SamStream<String>{
 					}
 				}
 				else if(opener!=-1) {
-					if(read==opener)opener=-1;
+					if(read==opener) {
+						if(keeped)sb.append((char)read);
+						opener=-1;
+					}
 					else sb.append((char)read);
 				}
 				else if(copener!=-1) {
@@ -70,6 +75,12 @@ public class TokenizerStream implements SamStream<String>{
 				}
 				else if(config.escapeAroundChars.indexOf(read)!=-1) {
 					opener=read;
+					keeped=false;
+				}
+				else if(config.keepedEscapeAroundChars.indexOf(read)!=-1) {
+					opener=read;
+					sb.append((char)read);
+					keeped=true;
 				}
 				else if(config.commentChars.indexOf(read)!=-1) {
 					copener=read;

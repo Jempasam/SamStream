@@ -13,6 +13,7 @@ public class TokenizerConfig {
 	public String escapeAroundChars;
 	public String escapeChars;
 	public String commentChars;
+	public String keepedEscapeAroundChars;
 	
 	
 	
@@ -26,12 +27,13 @@ public class TokenizerConfig {
 		this.escapeAroundChars="";
 		this.escapeChars="";
 		this.commentChars="";
+		this.keepedEscapeAroundChars="";
 	}
 
 
 
 	public TokenizerConfig(String cutChars, String ignoredChars, String uniqueChars, String groupChars, String endChars,
-			String startChars, String escapeAroundChars, String escapeChars, String commentChars) {
+			String startChars, String escapeAroundChars, String escapeChars, String commentChars, String keepedEscapeAroundChars) {
 		super();
 		this.cutChars = cutChars;
 		this.ignoredChars = ignoredChars;
@@ -42,6 +44,7 @@ public class TokenizerConfig {
 		this.escapeAroundChars = escapeAroundChars;
 		this.escapeChars = escapeChars;
 		this.commentChars = commentChars;
+		this.keepedEscapeAroundChars = keepedEscapeAroundChars;
 	}
 
 
@@ -66,6 +69,7 @@ public class TokenizerConfig {
 		this.escapeAroundChars = config.escapeAroundChars;
 		this.escapeChars = config.escapeChars;
 		this.commentChars = config.commentChars;
+		this.keepedEscapeAroundChars= config.keepedEscapeAroundChars;
 	}
 	
 	
