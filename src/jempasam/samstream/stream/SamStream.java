@@ -1,6 +1,7 @@
 package jempasam.samstream.stream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -235,6 +236,10 @@ public interface SamStream<T> extends BaseSamStream<T>{
 			next=tryNext();
 		}
 		return Optional.of(ret);
+	}
+	
+	default BufferedSStream<T> buffered(int bufferSize){
+		return new BufferedSStream<>(this, bufferSize);
 	}
 	
 	default SamStream<T> parallel(){
@@ -579,7 +584,7 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		}
 	}
 	
-	static class UntilSStream<I> extends DecoratorSStream<I,I>{
+static class UntilSStream<I> extends DecoratorSStream<I,I>{
 		
 		private Predicate<I> tester;
 		private boolean end;
@@ -612,6 +617,73 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		public void reset() {
 			super.reset();
 			this.end=false;
+		}
+	}
+	
+	static class BufferedSStream<I> extends SameDecoratorSStream<I>{
+		
+		private List<I> buffer;
+		private int end;
+		private int actual;
+		private int mark;
+		
+		public BufferedSStream(SamStream<I> input, int buffersize) {
+			super(input);
+			this.buffer=Arrays.asList((I[])new Object[buffersize]);
+			this.end=0;
+			this.actual=0;
+			this.mark=-1;
+		}
+		
+		@Override
+		public I tryNext() {
+			if(actual!=end) {
+				actual++;
+				if(actual>=buffer.size())actual=0;
+				return buffer.get(actual);
+			}
+			else if(walk()) {
+				actual=end;
+				return buffer.get(actual);
+			}
+			else return null;
+		}
+		
+		private boolean walk() {
+			I next=input.tryNext();
+			if(input.hasSucceed()) {
+				end++;
+				if(end>=buffer.size())end=0;
+				buffer.set(end, next);
+				return true;
+			}
+			else return false;
+		}
+		
+		public void back() {
+			actual--;
+			if(actual<0)actual=buffer.size()-1;
+		}
+		
+		public void mark() {
+			mark=actual;
+		}
+		
+		public void goToMark() {
+			if(mark!=-1)actual=mark;
+		}
+		
+		@Override
+		public boolean hasSucceed() {
+		return input.hasSucceed() || actual!=end;
+		}
+		
+		@Override
+		public void reset() {
+			super.reset();
+			this.end=0;
+			this.actual=0;
+			this.mark=-1;
 		}
 	}
 	
