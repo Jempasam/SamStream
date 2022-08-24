@@ -627,6 +627,7 @@ static class UntilSStream<I> extends DecoratorSStream<I,I>{
 		private int actual;
 		private int mark;
 		
+		@SuppressWarnings("unchecked")
 		public BufferedSStream(SamStream<I> input, int buffersize) {
 			super(input);
 			this.buffer=Arrays.asList((I[])new Object[buffersize]);
@@ -669,6 +670,14 @@ static class UntilSStream<I> extends DecoratorSStream<I,I>{
 			mark=actual;
 		}
 		
+		public Marker marker() {
+			return new Marker(actual, this);
+		}
+		
+		public void goToMarker(Marker marker) {
+			if(this==marker.stream)actual=marker.pos;
+		}
+		
 		public void goToMark() {
 			if(mark!=-1)actual=mark;
 		}
@@ -685,6 +694,17 @@ static class UntilSStream<I> extends DecoratorSStream<I,I>{
 			this.actual=0;
 			this.mark=-1;
 		}
+		
+		public static class Marker {
+			int pos;
+			BufferedSStream<?> stream;
+			Marker(int pos, BufferedSStream<?> stream) {
+				super();
+				this.pos = pos;
+				this.stream = stream;
+			}
+		}
+		
 	}
 	
 	public static class Numerated<T> {
