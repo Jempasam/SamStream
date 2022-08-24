@@ -30,6 +30,23 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		throw new UnsupportedOperationException("Unresettable SamStream. Use \"remaining\" methods variant instead.");
 	}
 	
+	default boolean next(Consumer<T> setter) {
+		T next=tryNext();
+		if(hasSucceed()) {
+			setter.accept(next);
+			return true;
+		}
+		else return false;
+	}
+	
+	default Optional<T> nextOptional(){
+		T next=tryNext();
+		if(hasSucceed()) {
+			return Optional.of(next);
+		}
+		else return Optional.empty();
+	}
+	
 	// Transform Stream
 	default <O> SamStream<O> map(Function<T, O> mapper){
 		return new MapSStream<>(this,mapper);
