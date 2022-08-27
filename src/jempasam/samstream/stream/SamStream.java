@@ -23,7 +23,7 @@ import java.util.stream.Collector;
 
 import jempasam.samstream.collectors.SamCollector;
 
-public interface SamStream<T> extends BaseSamStream<T>{
+public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	
 	@Override
 	default void reset() {
@@ -137,18 +137,26 @@ public interface SamStream<T> extends BaseSamStream<T>{
 	
 	
 	// Action
-	default void forEachRemaining(Consumer<? super T> action) {
+
+	
+	default void forEach(BiConsumer<SamStream<T>,T> action) {
+		reset();
+		T value;
+		do {
+			value=tryNext();
+			if(hasSucceed())action.accept(this,value);
+			else break;
+		}while(true);
+	}
+	
+	default void forEach(Consumer<? super T> action) {
+		reset();
 		T value;
 		do {
 			value=tryNext();
 			if(hasSucceed())action.accept(value);
 			else break;
 		}while(true);
-	}
-	
-	default void forEach(BiConsumer<SamStream<T>,T> action) {
-		reset();
-		forEachRemaining(action);
 	}
 	
 	default boolean ifOne(Predicate<T> test) {
@@ -180,38 +188,19 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		return count.get();
 	}
 	
-	default void forEachRemaining(BiConsumer<SamStream<T>,T> action) {
-		T value;
-		do {
-			value=tryNext();
-			if(hasSucceed())action.accept(this,value);
-			else break;
-		}while(true);
-	}
-	
-	default void forEach(Consumer<? super T> action) {
-		reset();
-		forEachRemaining(action);
-	}
-	
-	default <M,O> O collectRemaining(SamCollector<T, M, O> collector) {
-		forEachRemaining(collector::give);
+	default <M,O> O collect(SamCollector<T, M, O> collector) {
+		forEach(collector::give);
 		return collector.getResult();
 	}
 	
-	default <M,O> O collect(SamCollector<T, M, O> collector) {
-		reset();
-		return collectRemaining(collector);
-	}
-	
 	default <M,O> O collect(Collector<T, M, O> collector) {
-		reset();
 		M container=collector.supplier().get();
-		forEachRemaining( input -> collector.accumulator().accept(container, input) );
+		forEach( input -> collector.accumulator().accept(container, input) );
 		return collector.finisher().apply(container);
 	}
 	
 	default <O> O reduce(O from, BiFunction<O, T, O> action){
+		reset();
 		T value;
 		do {
 			value=tryNext();
@@ -261,6 +250,10 @@ public interface SamStream<T> extends BaseSamStream<T>{
 	
 	default SamStream<T> parallel(){
 		return new ParallelSamStream<>(this);
+	}
+	
+	default SamStream<T> remaining(){
+		return new RemainingSamStream<>(this);
 	}
 	
 	default SStreamIterator<T> iterator(){
@@ -411,7 +404,6 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		public CombineSStream(List<SamStream<I>> parts) {
 			this.parts=parts;
 			index=0;
-			parts.get(0).reset();
 		}
 		
 		@Override
@@ -427,7 +419,6 @@ public interface SamStream<T> extends BaseSamStream<T>{
 					index++;
 					if(index>=parts.size())return null;
 					stream=parts.get(index);
-					stream.reset();
 					next=stream.tryNext();
 				}while(!stream.hasSucceed());
 				return next;
@@ -443,7 +434,7 @@ public interface SamStream<T> extends BaseSamStream<T>{
 		@Override
 		public void reset() {
 			index=0;
-			parts.get(0).reset();
+			parts.forEach(SamStream::reset);
 		}
 	}
 	
@@ -701,7 +692,19 @@ static class UntilSStream<I> extends DecoratorSStream<I,I>{
 		
 		@Override
 		public boolean hasSucceed() {
-		return input.hasSucceed() || actual!=end;
+			return input.hasSucceed() || actual!=end;
+		}
+		
+		public boolean hasNext() {
+			if(actual!=end)return true;
+			else {
+				walk();
+				return actual!=end;
+			}
+		}
+		
+		public I actual() {
+			return buffer.get(actual);
 		}
 		
 		@Override

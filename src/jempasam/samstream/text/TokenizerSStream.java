@@ -1,14 +1,13 @@
 package jempasam.samstream.text;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import jempasam.samstream.stream.SamStream;
 
-public class TokenizerStream implements SamStream<String>{
+public class TokenizerSStream implements SamStream<String>{
 	
 	
 	
@@ -24,7 +23,7 @@ public class TokenizerStream implements SamStream<String>{
 	
 	
 	
-	public TokenizerStream(InputStream input, TokenizerConfig config) {
+	public TokenizerSStream(InputStream input, TokenizerConfig config) {
 		super();
 		this.config=config;
 		
