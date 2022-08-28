@@ -1,10 +1,11 @@
 package jempasam.samstream.adapter;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
+
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class ArraySStream<T> implements SamStream<T>{
+public class ArraySStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	
@@ -19,6 +20,8 @@ public class ArraySStream<T> implements SamStream<T>{
 		index=-1;
 	}
 	
+	
+	
 	@Override
 	public boolean hasSucceed() {
 		return index<array.length;
@@ -32,7 +35,15 @@ public class ArraySStream<T> implements SamStream<T>{
 	}
 	
 	@Override
-	public void reset() {
+	public synchronized void syncNext(Consumer<T> action) {
+		if(index<array.length) {
+			action.accept(array[index]);
+			index++;
+		}
+	}
+	
+	@Override
+	public synchronized void reset() {
 		index=-1;
 	}
 

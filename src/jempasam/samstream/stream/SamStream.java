@@ -262,7 +262,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	
 	
 	
-	abstract static class DecoratorSStream<I,O> implements SamStream<O>{	
+	abstract static class DecoratorSStream<I,O> extends AbstractSamStream<O>{	
 		
 		SamStream<I> input;
 		
@@ -318,6 +318,13 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		public O tryNext() {
 			I ret=input.tryNext();
 			return input.hasSucceed() ? mapper.apply(ret) : null;
+		}
+		
+		@Override
+		public synchronized void syncNext(Consumer<O> action) {
+			input.syncNext(element->{
+				action.accept(mapper.apply(element));
+			});
 		}
 	}
 
@@ -396,7 +403,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		}
 	}
 
-	static class CombineSStream<I> implements SamStream<I>{	
+	static class CombineSStream<I> extends AbstractSamStream<I>{	
 		
 		private List<SamStream<I>> parts;
 		private int index;
@@ -473,6 +480,18 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		}
 		
 		@Override
+		public synchronized void syncNext(Consumer<O> action) {
+			int c;
+			synchronized (this) {
+				counter++;
+				c=counter;
+			}
+			input.syncNext(element->{
+				action.accept(mapper.apply(c, element));
+			});
+		}
+		
+		@Override
 		public void reset() {
 			super.reset();
 			counter=-1;
@@ -499,6 +518,13 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			if(succeed)return ret;
 			else return null;
 		}
+		
+		@Override
+		public synchronized void syncNext(Consumer<I> action) {
+			super.syncNext(element->{
+				if(tester.test(element))action.accept(element);
+			});
+		}
 	}
 
 	static class Filter2SStream<I> extends DecoratorSStream<I,I>{	
@@ -523,6 +549,18 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			} while(succeed && !tester.test(counter,ret));
 			if(succeed)return ret;
 			else return null;
+		}
+		
+		@Override
+		public synchronized void syncNext(Consumer<I> action) {
+			int c;
+			synchronized (this) {
+				counter++;
+				c=counter;
+			}
+			super.syncNext(element->{
+				if(tester.test(c,element))action.accept(element);
+			});
 		}
 		
 		@Override
@@ -555,6 +593,16 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		}
 		
 		@Override
+		public synchronized void syncNext(Consumer<I> action) {
+			boolean doget=false;
+			synchronized (this) {
+				counter++;
+				if(counter<=max)doget=true;
+			}
+			if(doget)input.syncNext(action);
+		}
+		
+		@Override
 		public void reset() {
 			super.reset();
 			counter=0;
@@ -570,6 +618,14 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			this.set=new HashSet<>();
 		}
 		
+		private boolean testAndAdd(I val) {
+			if(set.contains(val))return true;
+			else {
+				set.add(val);
+				return false;
+			}
+		}
+		
 		@Override
 		public I tryNext() {
 			I ret;
@@ -577,12 +633,21 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			do {
 				ret=input.tryNext();
 				succeed=input.hasSucceed();
-			} while(succeed && !set.contains(ret));
-			if(succeed) {
-				set.add(ret);
-				return ret;
-			}
+			} while(succeed && testAndAdd(ret));
+			
+			if(succeed) return ret;
 			else return null;
+		}
+		
+		@Override
+		public synchronized void syncNext(Consumer<I> action) {
+			input.syncNext(element->{
+				boolean toget=false;
+				synchronized (this) {
+					toget=!testAndAdd(element);
+				}
+				if(toget)action.accept(element);
+			});
 		}
 		
 		@Override
@@ -592,7 +657,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		}
 	}
 	
-static class UntilSStream<I> extends DecoratorSStream<I,I>{
+	static class UntilSStream<I> extends DecoratorSStream<I,I>{
 		
 		private Predicate<I> tester;
 		private boolean end;

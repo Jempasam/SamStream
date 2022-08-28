@@ -1,10 +1,12 @@
 package jempasam.samstream.adapter;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class GeneratorSStream<T> implements SamStream<T>{
+public class GeneratorSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	
@@ -25,6 +27,11 @@ public class GeneratorSStream<T> implements SamStream<T>{
 	@Override
 	public T tryNext() {
 		return generator.get();
+	}
+	
+	@Override
+	public void syncNext(Consumer<T> action) {
+		action.accept(generator.get());
 	}
 	
 	@Override

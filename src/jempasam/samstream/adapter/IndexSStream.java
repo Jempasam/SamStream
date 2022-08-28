@@ -2,9 +2,11 @@ package jempasam.samstream.adapter;
 
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
+
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class IndexSStream<T> implements SamStream<T>{
+public class IndexSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	

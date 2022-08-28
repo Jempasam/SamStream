@@ -2,10 +2,12 @@ package jempasam.samstream.adapter;
 
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class RandomListSStream<T> implements SamStream<T>{
+public class RandomListSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	
@@ -28,6 +30,11 @@ public class RandomListSStream<T> implements SamStream<T>{
 	@Override
 	public T tryNext() {
 		return this.array.get(this.random.nextInt(this.array.size()));
+	}
+	
+	@Override
+	public synchronized void syncNext(Consumer<T> action) {
+		action.accept(this.array.get(this.random.nextInt(this.array.size())));
 	}
 	
 	@Override

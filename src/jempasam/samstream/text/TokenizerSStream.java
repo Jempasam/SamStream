@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import jempasam.samstream.stream.SamStream;
+import jempasam.samstream.stream.AbstractSamStream;
 
-public class TokenizerSStream implements SamStream<String>{
+public class TokenizerSStream extends AbstractSamStream<String>{
 	
 	
 	
@@ -15,7 +15,6 @@ public class TokenizerSStream implements SamStream<String>{
 	
 	private BufferedReader reader;
 	private StringBuilder sb;
-	private int depth;
 	private int opener;
 	private boolean keeped;
 	private int copener;
@@ -28,7 +27,6 @@ public class TokenizerSStream implements SamStream<String>{
 		this.config=config;
 		
 		this.reader=new BufferedReader(new InputStreamReader(input));
-		this.depth=0;
 		this.opener=-1;
 		this.copener=-1;
 		this.keeped=false;

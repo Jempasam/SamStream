@@ -97,4 +97,9 @@ public class ParallelSamStream<T> implements SamStream<T>{
 	public boolean hasSucceed() {
 		return decorated.hasSucceed();
 	}
+	
+	@Override
+	public void syncNext(Consumer<T> action) {
+		decorated.syncNext(action);
+	}
 }

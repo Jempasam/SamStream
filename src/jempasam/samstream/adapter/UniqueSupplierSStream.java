@@ -2,9 +2,10 @@ package jempasam.samstream.adapter;
 
 import java.util.function.Supplier;
 
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class UniqueSupplierSStream<T> implements SamStream<T>{
+public class UniqueSupplierSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	

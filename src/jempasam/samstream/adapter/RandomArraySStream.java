@@ -1,10 +1,12 @@
 package jempasam.samstream.adapter;
 
 import java.util.Random;
+import java.util.function.Consumer;
 
+import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class RandomArraySStream<T> implements SamStream<T>{
+public class RandomArraySStream<T> extends AbstractSamStream<T> implements SamStream<T>{
 	
 	
 	
@@ -27,6 +29,11 @@ public class RandomArraySStream<T> implements SamStream<T>{
 	@Override
 	public T tryNext() {
 		return this.array[this.random.nextInt(this.array.length)];
+	}
+	
+	@Override
+	public synchronized void syncNext(Consumer<T> action) {
+		action.accept(this.array[this.random.nextInt(this.array.length)]);
 	}
 	
 	@Override

@@ -1,5 +1,7 @@
 package jempasam.samstream.stream;
 
+import java.util.function.Consumer;
+
 public class RemainingSamStream<T> implements SamStream<T>{
 	
 	
@@ -28,5 +30,10 @@ public class RemainingSamStream<T> implements SamStream<T>{
 	@Override
 	public boolean hasSucceed() {
 		return decorated.hasSucceed();
+	}
+	
+	@Override
+	public void syncNext(Consumer<T> action) {
+		decorated.syncNext(action);
 	}
 }
