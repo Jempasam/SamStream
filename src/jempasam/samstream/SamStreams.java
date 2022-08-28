@@ -21,6 +21,8 @@ import jempasam.samstream.adapter.RandomArraySStream;
 import jempasam.samstream.adapter.RandomListSStream;
 import jempasam.samstream.adapter.UniqueFunctionSStream;
 import jempasam.samstream.adapter.UniqueSupplierSStream;
+import jempasam.samstream.graph.Graph;
+import jempasam.samstream.graph.GraphSamStream;
 import jempasam.samstream.stream.SamStream;
 import jempasam.samstream.stream.SamStream.Numerated;
 
@@ -60,6 +62,10 @@ public class SamStreams {
 		return new DoubleSupplierSStream<>(tryNext, hasNext);
 	}
 	
+	public static <N,L> GraphSamStream<N, L> create(Graph<N, L> graph, N parent){
+		return new GraphSamStream<N, L>(graph, parent);
+	}
+	
 	
 	
 	public static <T> SamStream<T> generator(Supplier<T> generator) {
@@ -75,6 +81,14 @@ public class SamStreams {
 	
 	public static <T> SamStream<T> random(List<T> values) {
 		return new RandomListSStream<>(values);
+	}
+	
+	public static <T> SamStream<T> empty(){
+		return new SamStream<T>() {
+			public boolean hasSucceed() {return false;}
+			public void syncNext(Consumer<T> action) { }
+			public T tryNext() {return null;}
+		};
 	}
 	
 	

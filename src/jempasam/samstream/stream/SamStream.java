@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -93,6 +95,13 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		return new CombineSStream<>(list);
 	}
 	
+	default SamStream<T> after(SamStream<T> before){
+		List<SamStream<T>> list=new ArrayList<>();
+		list.add(before);
+		list.add(this);
+		return new CombineSStream<>(list);
+	}
+	
 	@SuppressWarnings("unchecked")
 	default SamStream<T> after(SamStream<T> ...collection){
 		List<SamStream<T>> list=new ArrayList<>();
@@ -137,8 +146,6 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	
 	
 	// Action
-
-	
 	default void forEach(BiConsumer<SamStream<T>,T> action) {
 		reset();
 		T value;
@@ -177,6 +184,16 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			value=tryNext();
 		}
 		return true;
+	}
+	
+	default T getBest(Comparator<T> comparator) {
+		AtomicReference<T> ret=new AtomicReference<>(null);
+		forEach(element->{
+			if(ret.get()==null||comparator.compare(element, ret.get())>0) {
+				ret.set(element);
+			}
+		});
+		return ret.get();
 	}
 	
 	default int count(Predicate<T> test) {
