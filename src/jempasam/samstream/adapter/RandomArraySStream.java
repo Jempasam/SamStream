@@ -3,10 +3,9 @@ package jempasam.samstream.adapter;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class RandomArraySStream<T> extends AbstractSamStream<T> implements SamStream<T>{
+public class RandomArraySStream<T> implements SamStream<T>{
 	
 	
 	

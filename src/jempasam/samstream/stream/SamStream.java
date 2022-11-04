@@ -23,15 +23,33 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+import jempasam.samstream.SamStreams;
 import jempasam.samstream.collectors.SamCollector;
+import jempasam.samstream.collectors.SamCollectors;
 
+/**
+ * Une alternative à l'API Stream standard qui permet de créer facilement des nouveaux types de streams.
+ * 
+ * @author Samuel Demont
+ *
+ * @param <T>
+ */
 public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	
+	/**
+	 * Reset the stream to the first element.
+	 * @exception UnsupportedOperationException This stream is not resettable.
+	 */
 	@Override
 	default void reset() {
 		throw new UnsupportedOperationException("Unresettable SamStream. Use \"remaining\" methods variant instead.");
 	}
 	
+	/**
+	 * Try to get the next element and then give it to the consumer if succeed.
+	 * @param setter 
+	 * @return Did succeed
+	 */
 	default boolean next(Consumer<T> setter) {
 		T next=tryNext();
 		if(hasSucceed()) {
@@ -41,6 +59,17 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		else return false;
 	}
 	
+	default void syncNext(Consumer<T> action) {
+		synchronized (this) {
+			T v=tryNext();
+			if(hasSucceed())action.accept(v);
+		}
+	}
+	
+	/**
+	 * Try to get the next element and return an optional
+	 * @return The next element or empty optional if the end of the stream is reached.
+	 */
 	default Optional<T> nextOptional(){
 		T next=tryNext();
 		if(hasSucceed()) {
@@ -50,12 +79,59 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	}
 	
 	// Transform Stream
+	/**
+	 * Returns a stream consisting of the results of applying the given
+     * function to the elements of this stream.
+	 * @param <O> new stream type
+	 * @param mapper
+	 * @return the new stream
+	 */
 	default <O> SamStream<O> map(Function<T, O> mapper){
 		return new MapSStream<>(this,mapper);
 	}
 	
+	default SamStream<T> intercepted(Consumer<T> intercepter){
+		return new InterceptSStream<>(this,intercepter);
+	}
+	
+	default <O> SamStream<O> filterCast(Class<O> type){
+		return filter(i->type.isAssignableFrom(i.getClass())).map(type::cast);
+	}
+	
+	default <O, S extends SamStream<O>> S turnInto(Function<SamStream<T>, S> factory){
+		return factory.apply(this);
+	}
+	
+	/**
+	 * Returns a stream consisting of the results of applying the given
+     * function to the elements of this stream and their position in the stream.
+	 * @param <O> new stream type
+	 * @param mapper
+	 * @return the new stream
+	 */
 	default <O> SamStream<O> map(BiFunction<Integer, T, O> mapper){
 		return new Map2SStream<>(this,mapper);
+	}
+	
+	/**
+	 * Returns a stream consisting of the results of the Object::toString method the given
+     * function to the elements of this stream.
+	 * @return the new stream
+	 */
+	default SamStream<String> mapToString(){
+		return new MapSStream<>(this,String::valueOf);
+	}
+	
+	/**
+	 * Returns a stream consisting of the results of applying the given
+     * function to a pair of elements of this stream and another stream .
+	 * @param <O> new stream type
+	 * @param stream the second stream
+	 * @param mapper
+	 * @return the new stream
+	 */
+	default <O,U> SamStream<O> bimap(SamStream<U> stream, BiFunction<T,U,O> mapper){
+		return new BiMapSStream<>(this, stream, mapper);
 	}
 	
 	default <O> SamStream<O> reduced(Supplier<? extends O> factory, Predicate<? super T> doCreate, BiFunction<? super O,? super  T,? extends O> reducer){
@@ -124,14 +200,33 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	
 	
 	// Test
+	/**
+     * Returns a stream consisting of the elements of this stream that match
+     * the given predicate.
+     *
+     * @param test predicate to apply to each element to determine if it should be included
+     * @return the new stream
+     */
 	default SamStream<T> filter(Predicate<T> test){
 		return new FilterSStream<>(this, test);
 	}
 	
+	/**
+     * Returns a stream consisting of the elements of this stream except null.
+     *
+     * @return the new stream
+     */
 	default SamStream<T> notNull(){
 		return new FilterSStream<>(this, Objects::nonNull);
 	}
 	
+	/**
+     * Returns a stream consisting of the elements of this stream that match
+     * the given predicate.
+     *
+     * @param test predicate to apply to each element and their position to determine if it should be included
+     * @return the new stream
+     */
 	default SamStream<T> filter(BiPredicate<Integer,T> test){
 		return new Filter2SStream<>(this, test);
 	}
@@ -140,6 +235,11 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		return new UntilSStream<>(this,tester);
 	}
 	
+	/**
+     * Returns a stream consisting of the elements of distinct elements of this strea
+     *
+     * @return the new stream
+     */
 	default SamStream<T> distinct(){
 		return new DistinctSStream<>(this);
 	}
@@ -157,6 +257,16 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	}
 	
 	default void forEach(Consumer<? super T> action) {
+		reset();
+		T value;
+		do {
+			value=tryNext();
+			if(hasSucceed())action.accept(value);
+			else break;
+		}while(true);
+	}
+	
+	default void forEachUntilThrow(Consumer<? super T> action) throws Exception {
 		reset();
 		T value;
 		do {
@@ -186,7 +296,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		return true;
 	}
 	
-	default T getBest(Comparator<T> comparator) {
+	default T max(Comparator<T> comparator) {
 		AtomicReference<T> ret=new AtomicReference<>(null);
 		forEach(element->{
 			if(ret.get()==null||comparator.compare(element, ret.get())>0) {
@@ -196,6 +306,22 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		return ret.get();
 	}
 	
+	default T min(Comparator<T> comparator) {
+		AtomicReference<T> ret=new AtomicReference<>(null);
+		forEach(element->{
+			if(ret.get()==null||comparator.compare(element, ret.get())<0) {
+				ret.set(element);
+			}
+		});
+		return ret.get();
+	}
+	
+	/**
+     * Count the number of elements in the stream matching a predicate
+     *
+     *@param test the predicate
+     * @return the new stream
+     */
 	default int count(Predicate<T> test) {
 		reset();
 		AtomicInteger count=new AtomicInteger(0);
@@ -205,7 +331,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		return count.get();
 	}
 	
-	default <M,O> O collect(SamCollector<T, M, O> collector) {
+	default <M,O> O collect(SamCollector<? super T, M, O> collector) {
 		forEach(collector::give);
 		return collector.getResult();
 	}
@@ -214,6 +340,27 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		M container=collector.supplier().get();
 		forEach( input -> collector.accumulator().accept(container, input) );
 		return collector.finisher().apply(container);
+	}
+	
+	default List<T> toList(){
+		return collect(SamCollectors.toList());
+	}
+	
+	default List<T> toList(T separator){
+		return collect(SamCollectors.toList(separator));
+	}
+	
+	/**
+     * Collect all elements of the stream in a collection and create a stream of it.
+     *
+     * @return the new stream
+     */
+	default SamStream<T> fixed(){
+		return SamStreams.create(toList());
+	}
+	
+	default String toString(String separator){
+		return mapToString().collect(SamCollectors.concatenate(separator));
 	}
 	
 	default <O> O reduce(O from, BiFunction<O, T, O> action){
@@ -232,7 +379,8 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	default String asString() {
 		StringBuilder sb=new StringBuilder();
 		sb.append("[");
-		forEach(val->sb.append(val.toString()).append(","));
+		forEach(val->sb.append(String.valueOf(val)).append(","));
+		if(sb.length()>1)sb.setLength(sb.length()-1);
 		sb.append("]");
 		return sb.toString();
 	}
@@ -274,12 +422,13 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 	}
 	
 	default SStreamIterator<T> iterator(){
+		reset();
 		return new SStreamIterator<>(this);
 	}
 	
 	
 	
-	abstract static class DecoratorSStream<I,O> extends AbstractSamStream<O>{	
+	abstract static class DecoratorSStream<I,O> implements SamStream<O>{	
 		
 		SamStream<I> input;
 		
@@ -344,6 +493,55 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 			});
 		}
 	}
+	
+	static class InterceptSStream<I> extends DecoratorSStream<I,I>{	
+		
+		private Consumer<I> intercepter;
+		
+		public InterceptSStream(SamStream<I> input, Consumer<I> intercepter) {
+			super(input);
+			this.intercepter=intercepter;
+		}
+		
+		@Override
+		public I tryNext() {
+			I ret=input.tryNext();
+			if(input.hasSucceed())intercepter.accept(ret);
+			return ret;
+		}
+	}
+	
+	static class BiMapSStream<I,U,O> extends DecoratorSStream<I,O>{	
+		
+		private BiFunction<I,U, O> mapper;
+		private SamStream<U> merged;
+		
+		public BiMapSStream(SamStream<I> input, SamStream<U> merged, BiFunction<I,U, O> mapper) {
+			super(input);
+			this.mapper=mapper;
+			this.merged=merged;
+		}
+		
+		@Override
+		public O tryNext() {
+			I ret=input.tryNext();
+			U ret2=merged.tryNext();
+			return input.hasSucceed()&&merged.hasSucceed() ? mapper.apply(ret,ret2) : null;
+		}
+		
+		@Override
+		public boolean hasSucceed() {
+			return input.hasSucceed()&&merged.hasSucceed();
+		}
+		
+		@Override
+		public synchronized void syncNext(Consumer<O> action) {
+			input.syncNext(element->{
+				U element2=merged.tryNext();
+				if(merged.hasSucceed())action.accept(mapper.apply(element,element2));
+			});
+		}
+	}
 
 	static class ReduceSStream<I,O> extends DecoratorSStream<I,O>{	
 		
@@ -397,11 +595,13 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		public FlattenSStream(SamStream<SamStream<I>> input) {
 			super(input);
 			this.stream=input.tryNext();
-			this.stream.reset();
+			if(this.input.hasSucceed())this.stream.reset();
+			else this.stream=SamStreams.empty();
 		}
 		
 		@Override
 		public I tryNext() {
+			if(this.stream==null) return null;
 			I ret=stream.tryNext();
 			while(!stream.hasSucceed()) {
 				stream=input.tryNext();
@@ -416,11 +616,12 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		public void reset() {
 			super.reset();
 			this.stream=input.tryNext();
-			this.stream.reset();
+			if(this.input.hasSucceed())this.stream.reset();
+			else this.stream=SamStreams.empty();
 		}
 	}
 
-	static class CombineSStream<I> extends AbstractSamStream<I>{	
+	static class CombineSStream<I> implements SamStream<I>{	
 		
 		private List<SamStream<I>> parts;
 		private int index;
@@ -674,7 +875,7 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		}
 	}
 	
-	static class UntilSStream<I> extends DecoratorSStream<I,I>{
+static class UntilSStream<I> extends DecoratorSStream<I,I>{
 		
 		private Predicate<I> tester;
 		private boolean end;
@@ -780,13 +981,21 @@ public interface SamStream<T> extends BaseSamStream<T>, Iterable<T>{
 		public boolean hasNext() {
 			if(actual!=end)return true;
 			else {
-				walk();
-				return actual!=end;
+				return walk();
 			}
 		}
 		
 		public I actual() {
 			return buffer.get(actual);
+		}
+		
+		public I get(int offset) {
+			int size=buffer.size();
+			return buffer.get((actual+offset+size)%size);
+		}
+		
+		public I peek() {
+			return get(1);
 		}
 		
 		@Override

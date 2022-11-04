@@ -3,10 +3,9 @@ package jempasam.samstream.adapter;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class GeneratorSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
+public class GeneratorSStream<T> implements SamStream<T>{
 	
 	
 	

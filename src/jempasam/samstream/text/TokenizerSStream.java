@@ -1,13 +1,15 @@
 package jempasam.samstream.text;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import jempasam.samstream.stream.AbstractSamStream;
+import jempasam.samstream.stream.SamStream;
 
-public class TokenizerSStream extends AbstractSamStream<String>{
+
+public class TokenizerSStream implements SamStream<String>{
 	
 	
 	
@@ -31,6 +33,10 @@ public class TokenizerSStream extends AbstractSamStream<String>{
 		this.copener=-1;
 		this.keeped=false;
 		this.sb=new StringBuilder();
+	}
+	
+	public TokenizerSStream(String str, TokenizerConfig config) {
+		this(new ByteArrayInputStream(str.getBytes()),config);
 	}
 	
 	

@@ -3,16 +3,15 @@ package jempasam.samstream.graph;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import jempasam.samstream.SamStreams;
 import jempasam.samstream.graph.Graph.GraphLink;
 import jempasam.samstream.graph.path.GraphNodePath;
-import jempasam.samstream.stream.AbstractSamStream;
+import jempasam.samstream.stream.SamStream;
 
-public class GraphHeuristicSamStream<N,L> extends AbstractSamStream<GraphNodePath<N, L>>{
+public class GraphHeuristicSamStream<N,L> implements SamStream<GraphNodePath<N, L>>{
 	
 	
 	
@@ -57,7 +56,7 @@ public class GraphHeuristicSamStream<N,L> extends AbstractSamStream<GraphNodePat
 			return null;
 		}
 		else {
-			GraphNodePath<N, L> select=SamStreams.create(actualNodes).getBest(heuristic);
+			GraphNodePath<N, L> select=SamStreams.create(actualNodes).max(heuristic);
 			actualNodes.remove(select);
 			for(GraphLink<N, L> child : graph.getLinks(select.getLastValue())) {
 				if(!nodeFinded.contains(child.childNode)) {

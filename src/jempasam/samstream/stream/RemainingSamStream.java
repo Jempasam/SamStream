@@ -19,7 +19,6 @@ public class RemainingSamStream<T> implements SamStream<T>{
 	
 	@Override
 	public void reset() {
-		// no reset
 	}
 	
 	@Override

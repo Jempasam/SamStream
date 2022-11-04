@@ -1,13 +1,11 @@
 package jempasam.samstream.adapter;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class DoubleSupplierSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
+public class DoubleSupplierSStream<T> implements SamStream<T>{
 	
 	
 	

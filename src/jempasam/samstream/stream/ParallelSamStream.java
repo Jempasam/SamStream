@@ -3,11 +3,9 @@ package jempasam.samstream.stream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -53,7 +51,7 @@ public class ParallelSamStream<T> implements SamStream<T>{
 	}
 	
 	@Override
-	public <M,O> O collect(SamCollector<T, M, O> collector) {
+	public <M,O> O collect(SamCollector<? super T, M, O> collector) {
 		forEach(input -> {
 			collector.give(input);
 		});

@@ -1,5 +1,7 @@
 package jempasam.samstream.text;
 
+import java.io.InputStream;
+
 public class TokenizerConfig {
 	
 	
@@ -14,6 +16,7 @@ public class TokenizerConfig {
 	public String escapeChars;
 	public String commentChars;
 	public String keepedEscapeAroundChars;
+	public boolean keepEmpty;
 	
 	
 	
@@ -28,12 +31,11 @@ public class TokenizerConfig {
 		this.escapeChars="";
 		this.commentChars="";
 		this.keepedEscapeAroundChars="";
+		this.keepEmpty=false;
 	}
 
-
-
 	public TokenizerConfig(String cutChars, String ignoredChars, String uniqueChars, String groupChars, String endChars,
-			String startChars, String escapeAroundChars, String escapeChars, String commentChars, String keepedEscapeAroundChars) {
+			String startChars, String escapeAroundChars, String escapeChars, String commentChars, String keepedEscapeAroundChars, boolean keepEmpty) {
 		super();
 		this.cutChars = cutChars;
 		this.ignoredChars = ignoredChars;
@@ -45,9 +47,8 @@ public class TokenizerConfig {
 		this.escapeChars = escapeChars;
 		this.commentChars = commentChars;
 		this.keepedEscapeAroundChars = keepedEscapeAroundChars;
+		this.keepEmpty=keepEmpty;
 	}
-
-
 
 	public TokenizerConfig(String cutChars, String uniqueChars, String escapeAroundChars) {
 		this();
@@ -55,8 +56,6 @@ public class TokenizerConfig {
 		this.uniqueChars = uniqueChars;
 		this.escapeAroundChars = escapeAroundChars;
 	}
-	
-	
 	
 	public TokenizerConfig(TokenizerConfig config) {
 		super();
@@ -70,8 +69,72 @@ public class TokenizerConfig {
 		this.escapeChars = config.escapeChars;
 		this.commentChars = config.commentChars;
 		this.keepedEscapeAroundChars= config.keepedEscapeAroundChars;
+		this.keepEmpty=config.keepEmpty;
 	}
 	
 	
 	
+	public TokenizerConfig setSpliter(String cutChars) {
+		this.cutChars=cutChars;
+		return this;
+	}
+	
+	public TokenizerConfig setIgnored(String ignoredChars) {
+		this.ignoredChars=ignoredChars;
+		return this;
+	}
+	
+	public TokenizerConfig setAlone(String uniqueChars) {
+		this.uniqueChars=uniqueChars;
+		return this;
+	}
+	
+	public TokenizerConfig setGroupAlone(String groupChars) {
+		this.groupChars=groupChars;
+		return this;
+	}
+	
+	public TokenizerConfig setLastOfToken(String endChars) {
+		this.endChars=endChars;
+		return this;
+	}
+	
+	public TokenizerConfig setFirstOfToken(String startChars) {
+		this.startChars=startChars;
+		return this;
+	}
+	
+	public TokenizerConfig setStringEscaper(String escapeAroundChars) {
+		this.escapeAroundChars=escapeAroundChars;
+		return this;
+	}
+	
+	public TokenizerConfig setEscaper(String escapeChars) {
+		this.escapeChars=escapeChars;
+		return this;
+	}
+	
+	public TokenizerConfig setCommenter(String commentChars) {
+		this.commentChars=commentChars;
+		return this;
+	}
+	
+	public TokenizerConfig setStringEscaperKeeped(String keepedEscapeAroundChars) {
+		this.keepedEscapeAroundChars=keepedEscapeAroundChars;
+		return this;
+	}
+	
+	public TokenizerConfig keepEmptyToken() {
+		this.keepEmpty=true;
+		return this;
+	}
+	
+	public TokenizerConfig notKeepEmptyToken() {
+		this.keepEmpty=false;
+		return this;
+	}
+	
+	public TokenizerSStream create(InputStream input) {
+		return new TokenizerSStream(input, this);
+	}
 }

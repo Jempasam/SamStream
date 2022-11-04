@@ -11,14 +11,14 @@ public class SamCollectors {
 	
 	
 	
-	public static <T> SamCollector<T, List<T>, List<T>> toList(){
-		return new SamCollector<T, List<T>, List<T>>() {
+	public static <O,I extends O> SamCollector<I, List<O>, List<O>> toList(){
+		return new SamCollector<I, List<O>, List<O>>() {
 			
 			private int count=0;
-			private List<T> list=new ArrayList<>();
+			private List<O> list=new ArrayList<>();
 			
 			@Override
-			public synchronized void give(T ingredient) {
+			public synchronized void give(I ingredient) {
 				list.add(ingredient);
 				count++;
 			}
@@ -29,12 +29,43 @@ public class SamCollectors {
 			}
 			
 			@Override
-			public synchronized List<T> getState() {
+			public synchronized List<O> getState() {
 				return list;
 			}
 			
 			@Override
-			public synchronized List<T> getResult() {
+			public synchronized List<O> getResult() {
+				return list;
+			}
+		};
+	}
+	
+	public static <O,I extends O> SamCollector<I, List<O>, List<O>> toList(O separator){
+		return new SamCollector<I, List<O>, List<O>>() {
+			
+			private int count=0;
+			private List<O> list=new ArrayList<>();
+			
+			@Override
+			public synchronized void give(I ingredient) {
+				list.add(ingredient);
+				list.add(separator);
+				count++;
+			}
+			
+			@Override
+			public synchronized int countIngredient() {
+				return count;
+			}
+			
+			@Override
+			public synchronized List<O> getState() {
+				return list;
+			}
+			
+			@Override
+			public synchronized List<O> getResult() {
+				list.remove(list.size()-1);
 				return list;
 			}
 		};

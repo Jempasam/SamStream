@@ -3,10 +3,9 @@ package jempasam.samstream.adapter;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class UniqueFunctionSStream<T> extends AbstractSamStream<T> implements SamStream<T>, Consumer<Boolean>{
+public class UniqueFunctionSStream<T> implements SamStream<T>, Consumer<Boolean>{
 	
 	
 	

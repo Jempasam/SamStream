@@ -4,10 +4,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class RandomListSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
+public class RandomListSStream<T> implements SamStream<T>{
 	
 	
 	

@@ -1,20 +1,21 @@
 package jempasam.samstream.adapter;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import jempasam.samstream.stream.SamStream;
 
-public class ArraySStream<T> implements SamStream<T>{
+public class ListSStream<T> implements SamStream<T>{
 	
 	
 	
-	private T[] array;
+	private List<T> array;
 	private int index;
 	private int start;
 	
 	
 	
-	public ArraySStream(T[] array, int start) {
+	public ListSStream(List<T> array, int start) {
 		super();
 		this.array=array;
 		this.start=start-1;
@@ -25,20 +26,20 @@ public class ArraySStream<T> implements SamStream<T>{
 	
 	@Override
 	public boolean hasSucceed() {
-		return index<array.length;
+		return index<array.size();
 	}
 	
 	@Override
 	public T tryNext() {
 		index++;
-		if(index<array.length)return array[index];
+		if(index<array.size())return array.get(index);
 		else return null;
 	}
 	
 	@Override
 	public synchronized void syncNext(Consumer<T> action) {
-		if(index<array.length) {
-			action.accept(array[index]);
+		if(index<array.size()) {
+			action.accept(array.get(index));
 			index++;
 		}
 	}

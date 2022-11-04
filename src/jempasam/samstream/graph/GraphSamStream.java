@@ -8,9 +8,9 @@ import java.util.Set;
 
 import jempasam.samstream.graph.Graph.GraphLink;
 import jempasam.samstream.graph.path.GraphNodePath;
-import jempasam.samstream.stream.AbstractSamStream;
+import jempasam.samstream.stream.SamStream;
 
-public class GraphSamStream<N,L> extends AbstractSamStream<GraphNodePath<N, L>>{
+public class GraphSamStream<N,L> implements SamStream<GraphNodePath<N, L>>{
 	
 	
 	

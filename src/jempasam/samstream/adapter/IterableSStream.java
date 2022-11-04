@@ -2,10 +2,9 @@ package jempasam.samstream.adapter;
 
 import java.util.Iterator;
 
-import jempasam.samstream.stream.AbstractSamStream;
 import jempasam.samstream.stream.SamStream;
 
-public class IterableSStream<T> extends AbstractSamStream<T> implements SamStream<T>{
+public class IterableSStream<T> implements SamStream<T>{
 	
 	
 	

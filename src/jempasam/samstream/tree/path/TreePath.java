@@ -1,23 +1,23 @@
-package jempasam.samstream.graph.path;
+package jempasam.samstream.tree.path;
 
 import jempasam.samstream.collectors.SamCollectors;
 import jempasam.samstream.stream.SamStream;
 
-public class GraphNodePath<N,L> implements SamStream<GraphNodePath<N, L>>{
+public class TreePath<N,W> implements SamStream<TreePath<N,W>>{
 	
 	
 	
 	private N value;
-	private L linkWeight;
-	private GraphNodePath<N,L> parent;
+	private W linkWeight;
+	private TreePath<N,W> parent;
 	private int depth;
 	
-	private GraphNodePath<N,L> actual;
+	private TreePath<N,W> actual;
 	private boolean succeed;
 	
 	
 	
-	public GraphNodePath(GraphNodePath<N, L> parent, L weight, N value) {
+	public TreePath(TreePath<N,W> parent, W weight, N value) {
 		super();
 		this.value = value;
 		this.parent = parent;
@@ -26,10 +26,9 @@ public class GraphNodePath<N,L> implements SamStream<GraphNodePath<N, L>>{
 		reset();
 	}
 	
-	public GraphNodePath(N value) {
+	public TreePath(N value) {
 		this.value = value;
 		this.parent = null;
-		this.linkWeight=null;
 		this.depth = 0;
 		reset();
 	}
@@ -39,12 +38,12 @@ public class GraphNodePath<N,L> implements SamStream<GraphNodePath<N, L>>{
 	public N getLastValue() {
 		return value;
 	}
-
-	public L getLastWeight() {
+	
+	public W getLinkWeight() {
 		return linkWeight;
 	}
 
-	public GraphNodePath<N, L> getLastParent() {
+	public TreePath<N,W> getLastParent() {
 		return parent;
 	}
 
@@ -64,9 +63,9 @@ public class GraphNodePath<N,L> implements SamStream<GraphNodePath<N, L>>{
 	}
 	
 	@Override
-	public GraphNodePath<N, L> tryNext() {
+	public TreePath<N,W> tryNext() {
 		if(actual!=null) {
-			GraphNodePath<N, L> ret=actual;
+			TreePath<N,W> ret=actual;
 			actual=actual.parent;
 			return ret;
 		}
@@ -77,20 +76,20 @@ public class GraphNodePath<N,L> implements SamStream<GraphNodePath<N, L>>{
 	}
 	
 	public SamStream<N> values(){
-		return notLast().map(GraphNodePath::getLastValue);
+		return notLast().map(TreePath::getLastValue);
 	}
 	
-	public SamStream<L> weights(){
-		return notLast().map(GraphNodePath::getLastWeight);
+	public SamStream<W> weights(){
+		return notLast().map(TreePath::getLinkWeight);
 	}
 	
-	public SamStream<GraphNodePath<N, L>> notLast(){
+	public SamStream<TreePath<N,W>> notLast(){
 		return filter(pathpart->pathpart.parent!=null);
 	}
 	
 	@Override
 	public String toString() {
-		return map(part->part.value+(part.linkWeight!=null ? " <-"+part.linkWeight+"-" : "")) .collect(SamCollectors.concatenate(" "));
+		return map(part->part.value+" <--["+part.linkWeight+"]-" ) .collect(SamCollectors.concatenate(" "));
 	}
 	
 }
